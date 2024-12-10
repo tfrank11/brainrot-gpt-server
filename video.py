@@ -1,0 +1,170 @@
+from deepgram import DeepgramClient, ClientOptionsFromEnv, PrerecordedOptions
+from elevenlabs import ElevenLabs, save
+from supabase import Client
+from openai import OpenAI
+import moviepy
+import PyPDF2
+import uuid
+import json
+
+from classes import AudioTiming, InputInfo, VideoType
+
+
+def check_if_can_make_video():
+    return True
+
+
+def download_pdf(supabaseClient: Client, uid: str, pdf_id: str, temp_path: str):
+    print('download_pdf')
+    with open(temp_path, "wb+") as f:
+        response = supabaseClient.storage.from_("docs").download(
+            f"{uid}/{pdf_id}.pdf"
+        )
+        f.write(response)
+
+
+def get_text_from_pdf(pdf_path: str):
+    print('get_text_from_pdf')
+    transcript = ""
+    with open(pdf_path, 'rb') as pdf_file:
+        pdf_reader = PyPDF2.PdfReader(pdf_file)
+        for page_num in range(len(pdf_reader.pages)):
+            page = pdf_reader.pages[page_num]
+            transcript += page.extract_text()
+    text = transcript.encode('utf-8', 'ignore').decode('utf-8')
+    text = transcript.replace('\u0000', '')
+    return text
+
+
+def get_brainrot_summary(openAiClient: OpenAI, transcript: str) -> str:
+    print('get_brainrot_summary')
+    response = openAiClient.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user",
+                   "content": f"""Make a brainrot-themed voiceover summary for the following tex. use more words like "rizz", "fanum tax", "ohio", "skibidi", livvy dunne, and other brainrot/gen-z/tiktok things. Dont use words if they dont make sense. It shouldnt be forced. It should not exceed roughly ~30 seconds of material. Do not use exclamation points. Here is the transcript: {transcript}.
+
+                        the result should be a json object with one field, summary
+
+                       """}],
+        response_format={"type": "json_object"},
+        functions=[{
+              "name": "process_summary",
+              "parameters": {
+                  "type": "object",
+                  "properties": {
+                      "summary": {"type": "string"},
+                  },
+                  "required": ["summary"]
+              }
+        }],
+        function_call={"name": "process_summary"}
+    )
+
+    result = json.loads(
+        response.choices[0].message.function_call.arguments)  # type: ignore
+
+    return result['summary']
+
+
+def make_brainrot_audio(elevenLabsClient: ElevenLabs, summary: str, temp_audio_path: str):
+    print('make_brainrot_audio')
+    audio = elevenLabsClient.generate(
+        text=summary,
+        voice="Adam",
+        model="eleven_monolingual_v1"
+    )
+    save(audio, temp_audio_path)
+
+
+def download_source_video(supabaseClient: Client, temp_path: str):
+    print('download_source_video')
+    with open(temp_path, "wb+") as f:
+        response = supabaseClient.storage.from_("brainrot_source").download(
+            "minecraft.mp4"
+        )
+        f.write(response)
+
+
+def add_audio_to_video(audio_path: str, source_path: str, target_path: str):
+    print('add_audio_to_video')
+    my_clip = moviepy.VideoFileClip(source_path)
+    audio_background = moviepy.AudioFileClip(audio_path)
+    my_clip = my_clip.subclipped(0, audio_background.duration)
+    final_audio = moviepy.CompositeAudioClip([my_clip.audio, audio_background])
+    final_clip = my_clip.with_audio(final_audio)
+    final_clip.write_videofile(target_path)
+
+
+def get_word_timings(deepgram: DeepgramClient, audio_path: str) -> list[AudioTiming]:
+    print('get_word_timings')
+    with open(audio_path, "rb") as file:
+        buffer = file.read()
+
+    options = PrerecordedOptions(
+        smart_format=True,
+        model="nova-2",
+        language="en",
+        detect_language=True,
+        punctuate=True,
+        utterances=True,
+    )
+
+    payload = {
+        "buffer": buffer,
+    }
+
+    response = deepgram.listen.rest.v("1").transcribe_file(payload, options)
+
+    # Extract word timings from the response
+    words = []
+    for word in response.results.channels[0].alternatives[0].words:
+        timing = AudioTiming(
+            word=word.word, start_time=word.start, end_time=word.end)
+        words.append(timing)
+    return words
+
+
+def add_captions_to_video(timings: list[AudioTiming], no_caps_video_path: str, final_video_path: str):
+    print('add_captions_to_video')
+    video = moviepy.VideoFileClip(no_caps_video_path, audio=True)
+
+    font_path = "./assets/Arial.ttf"
+
+    text_clips = []
+    for timing in timings:
+        text_clip = (moviepy.TextClip(text=timing.word,
+                                      font_size=70,
+                                      color='white',
+                                      stroke_color='black',
+                                      stroke_width=2,
+                                      font=font_path)
+                     .with_position('center')
+                     .with_start(timing.start_time)
+                     .with_duration(timing.end_time - timing.start_time))
+        text_clips.append(text_clip)
+
+    final_video = moviepy.CompositeVideoClip(
+        [video] + text_clips)
+
+    final_video.write_videofile(final_video_path, audio_codec='aac')
+
+
+def update_supabase_with_video(supabaseClient: Client, uid: str, input_id: str, pdf_id: str, transcript: str, summary: str, video_type: VideoType, final_video_path: str):
+    print('update_supabase_with_video', uid, input_id)
+    video_id = str(uuid.uuid4())
+    with open(final_video_path, 'rb') as f:
+        supabaseClient.storage.from_("videos").upload(
+            file=f,
+            path=f"{uid}/{video_id}.mp4",
+            file_options={"cache-control": "3600",
+                          "upsert": "false", "content-type": "video/mp4"},
+        )
+    supabaseClient.table('inputs').upsert({
+        "uid": uid,
+        "input_id": input_id,
+        "video_id": video_id,
+        "pdf_id": pdf_id,
+        "transcript": transcript,
+        "summary": summary,
+        "video_type": video_type.value,
+    }).execute()
