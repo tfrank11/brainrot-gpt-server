@@ -3,7 +3,7 @@ from classes import AudioResponse, ErrorResponse, NewVideoRequest, RequestType, 
 from deepgram import DeepgramClient, ClientOptionsFromEnv, PrerecordedOptions
 from supabase_utils import get_uid_from_token
 from supabase import Client, create_client
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from elevenlabs import ElevenLabs
 from utils import silent_remove
 from openai import OpenAI
@@ -92,9 +92,15 @@ async def websocket_endpoint(websocket: WebSocket):
             else:
                 raise ValueError('Unrecognized request type')
 
+        except WebSocketDisconnect:
+            print("Client disconnected")
+            break  # Exit the loop if the client disconnects
         except Exception as e:
             error_response = ErrorResponse(
                 type=ResponseType.ERROR,
                 reason=f"Error processing request: {str(e)}"
             )
-            await websocket.send_json(error_response.model_dump(mode='json'))
+            try:
+                await websocket.send_json(error_response.model_dump(mode='json'))
+            except Exception as send_error:
+                print(f"Failed to send error response: {send_error}")
