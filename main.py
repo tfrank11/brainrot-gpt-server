@@ -97,5 +97,4 @@ async def websocket_endpoint(websocket: WebSocket):
                 type=ResponseType.ERROR,
                 reason=f"Error processing request: {str(e)}"
             )
-            #
             await websocket.send_json(error_response.model_dump(mode='json'))
