@@ -19,6 +19,7 @@ class InputInfo:
 
 class RequestType(IntEnum):
     LOGIN = 0
+    HEARTBEAT = 1
 
 
 class NewVideoRequest(BaseModel):

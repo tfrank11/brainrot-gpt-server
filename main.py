@@ -33,6 +33,9 @@ async def websocket_endpoint(websocket: WebSocket):
             temp_final_video_path = f"{str(uuid.uuid4())}.mp4"
             data = await websocket.receive_json()
             print('new client request', data)
+            if data['type'] == RequestType.HEARTBEAT.value:
+                print('heartbeat')
+                return
             if data['type'] == RequestType.LOGIN.value:
                 input_id = str(uuid.uuid4())
                 video_request = NewVideoRequest.model_validate(data)
