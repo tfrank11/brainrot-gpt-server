@@ -35,7 +35,7 @@ async def websocket_endpoint(websocket: WebSocket):
             print('new client request', data)
             if data['type'] == RequestType.HEARTBEAT.value:
                 print('heartbeat')
-                return
+                continue
             if data['type'] == RequestType.LOGIN.value:
                 input_id = str(uuid.uuid4())
                 video_request = NewVideoRequest.model_validate(data)
