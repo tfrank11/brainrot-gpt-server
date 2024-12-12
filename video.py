@@ -121,6 +121,7 @@ def get_word_timings(deepgram: DeepgramClient, audio_path: str) -> list[AudioTim
 def process_video(audio_path: str, source_path: str, timings: list[AudioTiming], final_video_path: str):
     print('process_video')
     my_clip = moviepy.VideoFileClip(source_path)
+    my_clip = my_clip.without_audio()
     audio_background = moviepy.AudioFileClip(audio_path)
     my_clip = my_clip.subclipped(0, audio_background.duration)
     final_audio = moviepy.CompositeAudioClip([my_clip.audio, audio_background])
