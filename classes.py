@@ -35,10 +35,9 @@ class ResponseType(IntEnum):
     TRANSCRIPT = 2
     SUMMARY = 3
     AUDIO_DONE = 4
-    ADDING_AUDIO_TO_VIDEO = 5
-    WORD_TIMINGS_DONE = 6
-    PROCESS_VIDEO_DONE = 7
-    VIDEO_DONE = 8
+    WORD_TIMINGS_DONE = 5
+    PROCESS_VIDEO_DONE = 6
+    VIDEO_DONE = 7
 
 
 class TypeOnlyResponse(BaseModel):
