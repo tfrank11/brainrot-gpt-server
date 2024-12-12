@@ -1,4 +1,4 @@
-from deepgram import DeepgramClient, ClientOptionsFromEnv, PrerecordedOptions
+from deepgram import DeepgramClient, PrerecordedOptions
 from elevenlabs import ElevenLabs, save
 from supabase import Client
 from openai import OpenAI
@@ -85,16 +85,6 @@ def download_source_video(supabaseClient: Client, temp_path: str):
         f.write(response)
 
 
-def add_audio_to_video(audio_path: str, source_path: str, target_path: str):
-    print('add_audio_to_video')
-    my_clip = moviepy.VideoFileClip(source_path)
-    audio_background = moviepy.AudioFileClip(audio_path)
-    my_clip = my_clip.subclipped(0, audio_background.duration)
-    final_audio = moviepy.CompositeAudioClip([my_clip.audio, audio_background])
-    final_clip = my_clip.with_audio(final_audio)
-    final_clip.write_videofile(target_path)
-
-
 def get_word_timings(deepgram: DeepgramClient, audio_path: str) -> list[AudioTiming]:
     print('get_word_timings')
     with open(audio_path, "rb") as file:
@@ -124,12 +114,14 @@ def get_word_timings(deepgram: DeepgramClient, audio_path: str) -> list[AudioTim
     return words
 
 
-def add_captions_to_video(timings: list[AudioTiming], no_caps_video_path: str, final_video_path: str):
-    print('add_captions_to_video')
-    video = moviepy.VideoFileClip(no_caps_video_path, audio=True)
-
+def process_video(audio_path: str, source_path: str, timings: list[AudioTiming], final_video_path: str):
+    print('process_video')
+    my_clip = moviepy.VideoFileClip(source_path)
+    audio_background = moviepy.AudioFileClip(audio_path)
+    my_clip = my_clip.subclipped(0, audio_background.duration)
+    final_audio = moviepy.CompositeAudioClip([my_clip.audio, audio_background])
+    final_clip = my_clip.with_audio(final_audio)
     font_path = "./assets/Arial.ttf"
-
     text_clips = []
     for timing in timings:
         text_clip = (moviepy.TextClip(text=timing.word,
@@ -144,8 +136,7 @@ def add_captions_to_video(timings: list[AudioTiming], no_caps_video_path: str, f
         text_clips.append(text_clip)
 
     final_video = moviepy.CompositeVideoClip(
-        [video] + text_clips)
-
+        [final_clip] + text_clips)
     final_video.write_videofile(final_video_path, audio_codec='aac')
 
 

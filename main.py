@@ -1,4 +1,4 @@
-from video import add_audio_to_video, add_captions_to_video, check_if_can_make_video, download_pdf, download_source_video, get_brainrot_summary, get_text_from_pdf, get_word_timings, make_brainrot_audio, update_supabase_with_video
+from video import process_video, check_if_can_make_video, download_pdf, download_source_video, get_brainrot_summary, get_text_from_pdf, get_word_timings, make_brainrot_audio, update_supabase_with_video
 from classes import ErrorResponse, NewVideoRequest, RequestType, ResponseType, SummaryResponse, TranscriptResponse, TypeOnlyResponse, VideoResponse, VideoType
 from deepgram import DeepgramClient, ClientOptionsFromEnv, PrerecordedOptions
 from supabase_utils import get_uid_from_token
@@ -70,26 +70,17 @@ async def websocket_endpoint(websocket: WebSocket):
                 # Video generation
                 download_source_video(
                     supabaseClient=supabaseClient, temp_path=temp_source_path)
-                add_audio_to_video(
-                    audio_path=temp_audio_path, source_path=temp_source_path, target_path=temp_video_no_caps_path)
-
-                add_audio_response = TypeOnlyResponse(
-                    type=ResponseType.ADDING_AUDIO_TO_VIDEO)
-                await websocket.send_json(add_audio_response.model_dump(mode='json'))
-                await sleep(0.1)
-
                 word_timings = get_word_timings(
                     deepgram=deepgramClient, audio_path=temp_audio_path)
                 word_timings_response = TypeOnlyResponse(
                     type=ResponseType.WORD_TIMINGS_DONE)
+
                 await websocket.send_json(word_timings_response.model_dump(mode='json'))
                 await sleep(0.1)
-                add_captions_to_video(
-                    timings=word_timings, no_caps_video_path=temp_video_no_caps_path, final_video_path=temp_final_video_path)
-                add_caps_response = TypeOnlyResponse(
-                    type=ResponseType.ADD_CAPS_DONE)
-                await websocket.send_json(add_caps_response.model_dump(mode='json'))
-                await sleep(0.1)
+
+                process_video(audio_path=temp_audio_path, source_path=temp_source_path,
+                              timings=word_timings, final_video_path=temp_final_video_path)
+
                 video_id = str(uuid.uuid4())
                 update_supabase_with_video(
                     supabaseClient=supabaseClient,
