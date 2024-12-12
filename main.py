@@ -7,10 +7,9 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from elevenlabs import ElevenLabs
 from utils import silent_remove
 from openai import OpenAI
-from asyncio import sleep, create_task, Event
+from asyncio import sleep
 import uuid
 import os
-import asyncio
 
 url: str = os.environ.get("SUPABASE_URL", "")
 key: str = os.environ.get("SUPABASE_KEY", "")
@@ -25,34 +24,21 @@ app = FastAPI()
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-
-    processing_complete = Event()
-
-    async def send_heartbeat():
+    while True:
         try:
-            while not processing_complete.is_set():
-                await sleep(20)
-                await websocket.send_json({"type": "heartbeat"})
-        except Exception as e:
-            print(f"Heartbeat error: {e}")
-
-    try:
-        heartbeat_task = create_task(send_heartbeat())
-
-        while True:
             temp_pdf_path = f"{str(uuid.uuid4())}.pdf"
             temp_audio_path = f"{str(uuid.uuid4())}.mp3"
             temp_source_path = f"{str(uuid.uuid4())}.mp4"
             temp_video_no_caps_path = f"{str(uuid.uuid4())}.mp4"
             temp_final_video_path = f"{str(uuid.uuid4())}.mp4"
-
             data = await websocket.receive_json()
             print('new client request', data)
-
+            if data['type'] == RequestType.HEARTBEAT.value:
+                print('heartbeat')
+                return
             if data['type'] == RequestType.LOGIN.value:
                 input_id = str(uuid.uuid4())
                 video_request = NewVideoRequest.model_validate(data)
-
                 # Auth
                 uid = get_uid_from_token(
                     supabase=supabaseClient, token=video_request.token)
@@ -63,8 +49,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 download_pdf(supabaseClient=supabaseClient,
                              pdf_id=video_request.pdf_id, uid=uid, temp_path=temp_pdf_path)
                 transcript = get_text_from_pdf(temp_pdf_path)
-                transcript_response = TranscriptResponse(
-                    transcript=transcript)
+                transcript_response = TranscriptResponse(transcript=transcript)
                 await websocket.send_json(
                     transcript_response.model_dump(mode='json'))
                 await sleep(0.1)
@@ -72,8 +57,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 # Brainrot summary and audio
                 brainrot_summary = get_brainrot_summary(
                     openAiClient=openAiClient, transcript=transcript)
-                brainrot_response = SummaryResponse(
-                    summary=brainrot_summary)
+                brainrot_response = SummaryResponse(summary=brainrot_summary)
                 await websocket.send_json(brainrot_response.model_dump(mode='json'))
                 await sleep(0.1)
 
@@ -108,29 +92,18 @@ async def websocket_endpoint(websocket: WebSocket):
                 silent_remove(temp_source_path)
                 silent_remove(temp_video_no_caps_path)
                 silent_remove(temp_final_video_path)
-
-                # Mark processing as complete
-                processing_complete.set()
-
             else:
                 raise ValueError('Unrecognized request type')
 
-    except WebSocketDisconnect:
-        print("Client disconnected")
-    except Exception as e:
-        error_response = ErrorResponse(
-            type=ResponseType.ERROR,
-            reason=f"Error processing request: {str(e)}"
-        )
-        try:
-            await websocket.send_json(error_response.model_dump(mode='json'))
-        except Exception as send_error:
-            print(f"Failed to send error response: {send_error}")
-    finally:
-        # Ensure the heartbeat task is cancelled
-        if 'heartbeat_task' in locals():
-            heartbeat_task.cancel()
+        except WebSocketDisconnect:
+            print("Client disconnected")
+            break  # Exit the loop if the client disconnects
+        except Exception as e:
+            error_response = ErrorResponse(
+                type=ResponseType.ERROR,
+                reason=f"Error processing request: {str(e)}"
+            )
             try:
-                await heartbeat_task
-            except asyncio.CancelledError:
-                pass
+                await websocket.send_json(error_response.model_dump(mode='json'))
+            except Exception as send_error:
+                print(f"Failed to send error response: {send_error}")
