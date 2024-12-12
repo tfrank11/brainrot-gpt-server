@@ -123,11 +123,7 @@ def process_video(audio_path: str, source_path: str, timings: list[AudioTiming],
     my_clip = moviepy.VideoFileClip(source_path)
     audio_background = moviepy.AudioFileClip(audio_path)
     my_clip = my_clip.subclipped(0, audio_background.duration)
-
-    reduced_source_audio = my_clip.audio.volumex(0.25)
-    final_audio = moviepy.CompositeAudioClip(
-        [reduced_source_audio, audio_background])
-
+    final_audio = moviepy.CompositeAudioClip([my_clip.audio, audio_background])
     final_clip = my_clip.with_audio(final_audio)
     font_path = "./assets/Arial.ttf"
     text_clips = []
