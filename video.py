@@ -76,11 +76,15 @@ def make_brainrot_audio(elevenLabsClient: ElevenLabs, summary: str, temp_audio_p
     save(audio, temp_audio_path)
 
 
-def download_source_video(supabaseClient: Client, temp_path: str):
+def download_source_video(supabaseClient: Client, temp_path: str, video_type: VideoType):
     print('download_source_video')
     with open(temp_path, "wb+") as f:
+        name = "minecraft.mp4"
+        if video_type == VideoType.SUBWAYSURFER:
+            name = "subway.mp4"
+        # more types soon perhaps
         response = supabaseClient.storage.from_("brainrot_source").download(
-            "minecraft.mp4"
+            name
         )
         f.write(response)
 

@@ -69,7 +69,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
                 # Video generation
                 download_source_video(
-                    supabaseClient=supabaseClient, temp_path=temp_source_path)
+                    supabaseClient=supabaseClient, temp_path=temp_source_path, video_type=video_request.video_type)
                 word_timings = get_word_timings(
                     deepgram=deepgramClient, audio_path=temp_audio_path)
                 word_timings_response = TypeOnlyResponse(
