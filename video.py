@@ -55,8 +55,9 @@ def get_brainrot_summary(openAiClient: OpenAI, transcript: str):
                   "type": "object",
                   "properties": {
                       "summary": {"type": "string"},
+                      "title": {"type": "string"},
                   },
-                  "required": ["summary"]
+                  "required": ["summary", "title"]
               }
         }],
         function_call={"name": "process_summary"}
