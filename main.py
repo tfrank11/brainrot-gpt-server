@@ -93,7 +93,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     pdf_id=video_request.pdf_id,
                     transcript=transcript,
                     summary=brainrot_summary['summary'],
-                    title=brainrot_summary[['title']],
+                    title=brainrot_summary['title'],
                     video_type=video_request.video_type,
                     final_video_path=temp_final_video_path,
                     video_id=video_id)
