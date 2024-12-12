@@ -74,12 +74,15 @@ async def websocket_endpoint(websocket: WebSocket):
                     deepgram=deepgramClient, audio_path=temp_audio_path)
                 word_timings_response = TypeOnlyResponse(
                     type=ResponseType.WORD_TIMINGS_DONE)
-
                 await websocket.send_json(word_timings_response.model_dump(mode='json'))
                 await sleep(0.1)
 
                 process_video(audio_path=temp_audio_path, source_path=temp_source_path,
                               timings=word_timings, final_video_path=temp_final_video_path)
+                process_video_done = TypeOnlyResponse(
+                    type=ResponseType.PROCESS_VIDEO_DONE)
+                await websocket.send_json(process_video_done.model_dump(mode='json'))
+                await sleep(0.1)
 
                 video_id = str(uuid.uuid4())
                 update_supabase_with_video(

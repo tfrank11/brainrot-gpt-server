@@ -37,7 +37,7 @@ class ResponseType(IntEnum):
     AUDIO_DONE = 4
     ADDING_AUDIO_TO_VIDEO = 5
     WORD_TIMINGS_DONE = 6
-    ADD_CAPS_DONE = 7
+    PROCESS_VIDEO_DONE = 7
     VIDEO_DONE = 8
 
 
