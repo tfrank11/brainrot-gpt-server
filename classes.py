@@ -57,7 +57,7 @@ class SummaryResponse(BaseModel):
 
 class VideoResponse(BaseModel):
     type: ResponseType = ResponseType.VIDEO_DONE
-    video_id: int
+    video_id: str
 
 
 class ErrorResponse(BaseModel):

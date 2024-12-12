@@ -149,9 +149,8 @@ def add_captions_to_video(timings: list[AudioTiming], no_caps_video_path: str, f
     final_video.write_videofile(final_video_path, audio_codec='aac')
 
 
-def update_supabase_with_video(supabaseClient: Client, uid: str, input_id: str, pdf_id: str, transcript: str, summary: str, video_type: VideoType, final_video_path: str):
+def update_supabase_with_video(supabaseClient: Client, uid: str, input_id: str, pdf_id: str, transcript: str, summary: str, video_type: VideoType, final_video_path: str, video_id: str):
     print('update_supabase_with_video', uid, input_id)
-    video_id = str(uuid.uuid4())
     with open(final_video_path, 'rb') as f:
         supabaseClient.storage.from_("videos").upload(
             file=f,

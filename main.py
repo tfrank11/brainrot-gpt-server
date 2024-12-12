@@ -1,5 +1,5 @@
 from video import add_audio_to_video, add_captions_to_video, check_if_can_make_video, download_pdf, download_source_video, get_brainrot_summary, get_text_from_pdf, get_word_timings, make_brainrot_audio, update_supabase_with_video
-from classes import ErrorResponse, NewVideoRequest, RequestType, ResponseType, SummaryResponse, TranscriptResponse, TypeOnlyResponse, VideoType
+from classes import ErrorResponse, NewVideoRequest, RequestType, ResponseType, SummaryResponse, TranscriptResponse, TypeOnlyResponse, VideoResponse, VideoType
 from deepgram import DeepgramClient, ClientOptionsFromEnv, PrerecordedOptions
 from supabase_utils import get_uid_from_token
 from supabase import Client, create_client
@@ -90,7 +90,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     type=ResponseType.ADD_CAPS_DONE)
                 await websocket.send_json(add_caps_response.model_dump(mode='json'))
                 await sleep(0.1)
-
+                video_id = str(uuid.uuid4())
                 update_supabase_with_video(
                     supabaseClient=supabaseClient,
                     uid=uid,
@@ -99,9 +99,10 @@ async def websocket_endpoint(websocket: WebSocket):
                     transcript=transcript,
                     summary=brainrot_summary,
                     video_type=video_request.video_type,
-                    final_video_path=temp_final_video_path)
-                video_done_response = TypeOnlyResponse(
-                    type=ResponseType.VIDEO_DONE)
+                    final_video_path=temp_final_video_path,
+                    video_id=video_id)
+                video_done_response = VideoResponse(
+                    video_id=video_id, type=ResponseType.VIDEO_DONE)
                 await websocket.send_json(video_done_response.model_dump(mode='json'))
                 await sleep(0.1)
                 silent_remove(temp_pdf_path)
