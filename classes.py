@@ -30,16 +30,19 @@ class NewVideoRequest(BaseModel):
 
 
 class ResponseType(IntEnum):
-    LOGIN_OK = 0
-    TRANSCRIPT = 1
-    SUMMARY = 2
-    AUDIO_DONE = 3
-    VIDEO_DONE = 4
-    ERROR = 5
+    ERROR = 0
+    LOGIN_OK = 1
+    TRANSCRIPT = 2
+    SUMMARY = 3
+    AUDIO_DONE = 4
+    ADDING_AUDIO_TO_VIDEO = 5
+    WORD_TIMINGS_DONE = 6
+    ADD_CAPS_DONE = 7
+    VIDEO_DONE = 8
 
 
-class LoginOkResponse(BaseModel):
-    type: ResponseType = ResponseType.LOGIN_OK
+class TypeOnlyResponse(BaseModel):
+    type: ResponseType
 
 
 class TranscriptResponse(BaseModel):
@@ -50,10 +53,6 @@ class TranscriptResponse(BaseModel):
 class SummaryResponse(BaseModel):
     type: ResponseType = ResponseType.SUMMARY
     summary: str
-
-
-class AudioResponse(BaseModel):
-    type: ResponseType = ResponseType.AUDIO_DONE
 
 
 class VideoResponse(BaseModel):
