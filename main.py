@@ -57,12 +57,13 @@ async def websocket_endpoint(websocket: WebSocket):
                 # Brainrot summary and audio
                 brainrot_summary = get_brainrot_summary(
                     openAiClient=openAiClient, transcript=transcript)
-                brainrot_response = SummaryResponse(summary=brainrot_summary)
+                brainrot_response = SummaryResponse(
+                    summary=brainrot_summary['summary'])
                 await websocket.send_json(brainrot_response.model_dump(mode='json'))
                 await sleep(0.1)
 
                 make_brainrot_audio(
-                    elevenLabsClient, summary=brainrot_summary, temp_audio_path=temp_audio_path)
+                    elevenLabsClient, summary=brainrot_summary['summary'], temp_audio_path=temp_audio_path)
                 audio_response = TypeOnlyResponse(type=ResponseType.AUDIO_DONE)
                 await websocket.send_json(audio_response.model_dump(mode='json'))
                 await sleep(0.1)
@@ -91,7 +92,8 @@ async def websocket_endpoint(websocket: WebSocket):
                     input_id=input_id,
                     pdf_id=video_request.pdf_id,
                     transcript=transcript,
-                    summary=brainrot_summary,
+                    summary=brainrot_summary['summary'],
+                    title=brainrot_summary[['title']],
                     video_type=video_request.video_type,
                     final_video_path=temp_final_video_path,
                     video_id=video_id)

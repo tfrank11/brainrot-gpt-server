@@ -36,14 +36,16 @@ def get_text_from_pdf(pdf_path: str):
     return text
 
 
-def get_brainrot_summary(openAiClient: OpenAI, transcript: str) -> str:
+def get_brainrot_summary(openAiClient: OpenAI, transcript: str):
     print('get_brainrot_summary')
     response = openAiClient.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user",
                    "content": f"""Make a brainrot-themed voiceover summary for the following tex. use more words like "rizz", "fanum tax", "ohio", "skibidi", livvy dunne, and other brainrot/gen-z/tiktok things. Dont use words if they dont make sense. It shouldnt be forced. It should not exceed roughly ~30 seconds of material. Do not use exclamation points. Here is the transcript: {transcript}.
 
-                        the result should be a json object with one field, summary
+                        the result should be a json object with the following fields
+                        - summary
+                        - title (a 3-6 word title)
 
                        """}],
         response_format={"type": "json_object"},
@@ -63,7 +65,7 @@ def get_brainrot_summary(openAiClient: OpenAI, transcript: str) -> str:
     result = json.loads(
         response.choices[0].message.function_call.arguments)  # type: ignore
 
-    return result['summary']
+    return result
 
 
 def make_brainrot_audio(elevenLabsClient: ElevenLabs, summary: str, temp_audio_path: str):
@@ -145,7 +147,7 @@ def process_video(audio_path: str, source_path: str, timings: list[AudioTiming],
     final_video.write_videofile(final_video_path, audio_codec='aac')
 
 
-def update_supabase_with_video(supabaseClient: Client, uid: str, input_id: str, pdf_id: str, transcript: str, summary: str, video_type: VideoType, final_video_path: str, video_id: str):
+def update_supabase_with_video(supabaseClient: Client, uid: str, input_id: str, pdf_id: str, transcript: str, summary: str, title: str, video_type: VideoType, final_video_path: str, video_id: str):
     print('update_supabase_with_video', uid, input_id)
     with open(final_video_path, 'rb') as f:
         supabaseClient.storage.from_("videos").upload(
@@ -160,6 +162,7 @@ def update_supabase_with_video(supabaseClient: Client, uid: str, input_id: str, 
         "video_id": video_id,
         "pdf_id": pdf_id,
         "transcript": transcript,
+        "title": title,
         "summary": summary,
         "video_type": video_type.value,
     }).execute()
