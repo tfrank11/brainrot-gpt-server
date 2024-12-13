@@ -146,7 +146,7 @@ def process_video(audio_path: str, source_path: str, timings: list[AudioTiming],
     final_video = moviepy.CompositeVideoClip(
         [final_clip] + text_clips)
     final_video.write_videofile(
-        final_video_path, audio_codec='aac', fps=24, threads=4)
+        final_video_path, audio_codec='aac', fps=24, threads=8)
 
 
 def update_supabase_with_video(supabaseClient: Client, uid: str, input_id: str, pdf_id: str, transcript: str, summary: str, title: str, video_type: VideoType, final_video_path: str, video_id: str):
@@ -168,3 +168,4 @@ def update_supabase_with_video(supabaseClient: Client, uid: str, input_id: str, 
         "summary": summary,
         "video_type": video_type.value,
     }).execute()
+    print('done uploading')
