@@ -1,13 +1,12 @@
 from deepgram import DeepgramClient, PrerecordedOptions
+from classes import AudioTiming, VideoType
 from elevenlabs import ElevenLabs, save
 from supabase import Client
 from openai import OpenAI
 import moviepy
 import PyPDF2
-import uuid
 import json
 
-from classes import AudioTiming, InputInfo, VideoType
 
 
 def check_if_can_make_video():
