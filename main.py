@@ -29,7 +29,6 @@ async def websocket_endpoint(websocket: WebSocket):
             temp_pdf_path = f"{str(uuid.uuid4())}.pdf"
             temp_audio_path = f"{str(uuid.uuid4())}.mp3"
             temp_source_path = f"{str(uuid.uuid4())}.mp4"
-            temp_video_no_caps_path = f"{str(uuid.uuid4())}.mp4"
             temp_final_video_path = f"{str(uuid.uuid4())}.mp4"
             data = await websocket.receive_json()
             print('new client request', data)
@@ -104,7 +103,6 @@ async def websocket_endpoint(websocket: WebSocket):
                 silent_remove(temp_pdf_path)
                 silent_remove(temp_audio_path)
                 silent_remove(temp_source_path)
-                silent_remove(temp_video_no_caps_path)
                 silent_remove(temp_final_video_path)
             else:
                 raise ValueError('Unrecognized request type')
