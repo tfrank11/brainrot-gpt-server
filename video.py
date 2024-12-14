@@ -41,7 +41,7 @@ def get_brainrot_summary(openAiClient: OpenAI, transcript: str):
     response = openAiClient.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user",
-                   "content": f"""Make a brainrot-themed voiceover summary for the following tex. use words like "rizz" and other brainrot/gen-z/tiktok things. Dont go too hard with the brainrot stuff. It should still sound vaguely normal. It should not exceed roughly ~30 seconds of material. Do not use exclamation points. Here is the transcript: {transcript}.
+                   "content": f"""Make a brainrot-themed voiceover summary for the following tex. use words like "rizz" and other brainrot/gen-z/tiktok things. Dont go too hard with the brainrot stuff. It should still sound vaguely normal. It should not exceed roughly ~45 seconds of material. Do not use exclamation points. Here is the transcript: {transcript}.
 
                         the result should be a json object with the following fields
                         - summary
