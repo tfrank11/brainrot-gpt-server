@@ -18,7 +18,7 @@ Turn PDFs into short form, digestible videos. Perfect if you have a sub-30 secon
 
 ## Features
 
-- **PDF to Video Conversion**: Upload a PDF document and receive a video.
+
 1. **Upload PDF**: Users can upload a PDF document through the interface.
 2. **Processing**: The backend processes the PDF to extract text and generate a summary using OpenAI's GPT-4o-mini.
 3. **Audio Generation**: A voiceover is created based on the summary using ElevenLabs. This is the familiar TikTok voice.
