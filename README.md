@@ -22,7 +22,7 @@ Turn PDFs into short form, digestible videos. Perfect if you have a sub-30 secon
 1. **Upload PDF**: Users can upload a PDF document through the interface.
 2. **Processing**: The backend processes the PDF to extract text and generate a summary using OpenAI's GPT-4o-mini.
 3. **Audio Generation**: A voiceover is created based on the summary using ElevenLabs. This is the familiar TikTok voice.
-4. **Video Creation**: The application combines the audio with a source video using MoviePy, adding text overlays for key points.
+4. **Video Creation**: The application combines the audio with a source video using MoviePy, adding text overlays for captions.
 5. **Download**: Users can download the final video once processing is complete.
 
 ## Key Services/Libraries Used
