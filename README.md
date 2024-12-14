@@ -27,6 +27,7 @@ Turn PDFs into short form, digestible videos. Perfect if you have a sub-30 secon
 
 ## Key Services/Libraries Used
 
+- **Supabase**: For authentication and database.
 - **OpenAI**: For generating summaries from the extracted text.
 - **ElevenLabs**: For creating voiceovers based on the summary.
 - **Deepgram**: For transcribing the audio and getting timestamps for each word.
